@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import type { MotionValue } from "motion/react";
 import type { CSSProperties, PointerEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useClientReducedMotion } from "@/components/use-client-reduced-motion";
 
-const pinioHref = "https://www.pinio-app.com/en";
 const contactHref = "mailto:hello@guba.studio";
+const workHref = "/work";
 const cursorSpring = { damping: 38, stiffness: 360, mass: 0.85 };
+const revealEase = [0.22, 1, 0.36, 1] as const;
 
 type CursorTarget = {
   element: HTMLElement;
@@ -22,24 +23,31 @@ export function StudioHome() {
   const [cursorTarget, setCursorTarget] = useState<CursorTarget | null>(null);
   const [cursorVisible, setCursorVisible] = useState(false);
   const [cursorPressed, setCursorPressed] = useState(false);
+  const [cursorStretched, setCursorStretched] = useState(false);
+  const [workPreviewVisible, setWorkPreviewVisible] = useState(false);
   const activeTarget = useRef<CursorTarget | null>(null);
+  const stretchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cursorX = useMotionValue(-80);
   const cursorY = useMotionValue(-80);
   const cursorWidth = useMotionValue(16);
   const cursorHeight = useMotionValue(16);
   const cursorRadius = useMotionValue(999);
   const latestPointer = useRef({ x: -80, y: -80 });
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
-  const smoothX = useSpring(pointerX, { damping: 34, stiffness: 160, mass: 0.7 });
-  const smoothY = useSpring(pointerY, { damping: 34, stiffness: 160, mass: 0.7 });
-  const pixelX = useTransform(smoothX, [-1, 1], [-8, 8]);
-  const pixelY = useTransform(smoothY, [-1, 1], [-5, 5]);
+
+  useEffect(() => {
+    return () => {
+      if (stretchTimeout.current) clearTimeout(stretchTimeout.current);
+    };
+  }, []);
+
+  function pulseCursor() {
+    setCursorStretched(true);
+    if (stretchTimeout.current) clearTimeout(stretchTimeout.current);
+    stretchTimeout.current = setTimeout(() => setCursorStretched(false), 170);
+  }
 
   function moveCursor(clientX: number, clientY: number, target = activeTarget.current) {
     latestPointer.current = { x: clientX, y: clientY };
-    pointerX.set((clientX / (window.innerWidth || 1) - 0.5) * 2);
-    pointerY.set((clientY / (window.innerHeight || 1) - 0.5) * 2);
 
     if (!target) {
       cursorX.set(clientX - 8);
@@ -73,9 +81,11 @@ export function StudioHome() {
   }
 
   function setCursorAround(element: HTMLElement, event?: PointerEvent<HTMLElement>, padding = 8, radius = 22) {
+    const isNewTarget = activeTarget.current?.element !== element;
     const target = { element, padding, radius };
     activeTarget.current = target;
     setCursorTarget(target);
+    if (isNewTarget) pulseCursor();
 
     const rect = element.getBoundingClientRect();
     moveCursor(event?.clientX ?? rect.left + rect.width / 2, event?.clientY ?? rect.top + rect.height / 2, target);
@@ -93,6 +103,12 @@ export function StudioHome() {
     onPointerMove: (event: PointerEvent<HTMLElement>) => setCursorAround(event.currentTarget, event, padding, radius),
   });
 
+  const reveal = {
+    animate: reduceMotion ? undefined : { y: 0 },
+    initial: reduceMotion ? false : { y: "110%" },
+    transition: { duration: 0.78, ease: revealEase },
+  };
+
   return (
     <main
       className="home-canvas personal-canvas bg-paper text-ink"
@@ -104,6 +120,7 @@ export function StudioHome() {
     >
       <PersonalCursor
         pressed={cursorPressed}
+        stretched={cursorStretched}
         target={cursorTarget}
         visible={cursorVisible && !reduceMotion}
         height={cursorHeight}
@@ -112,59 +129,61 @@ export function StudioHome() {
         x={cursorX}
         y={cursorY}
       />
-      <PersonalHeader cursorHandlers={cursorHandlers} />
+      <PersonalHeader
+        cursorHandlers={cursorHandlers}
+        onWorkPreviewChange={setWorkPreviewVisible}
+      />
 
       <section className="personal-frame" aria-labelledby="personal-title">
+        <SignatureMark />
+        <WorkPreview visible={workPreviewVisible} />
         <div className="personal-hero">
           <motion.div
             className="personal-copy"
             initial={reduceMotion ? false : { opacity: 0, y: 14 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            transition={{ duration: 0.66, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.66, ease: revealEase }}
           >
-            <p className="personal-kicker font-mono">product design / frontend engineering</p>
+            <p className="personal-kicker font-mono">
+              <span className="reveal-clip">
+                <motion.span className="reveal-block" {...reveal}>
+                  design / code / products
+                </motion.span>
+              </span>
+            </p>
             <h1 id="personal-title" className="personal-title">
-              I design and build products that feel simple to use.
+              <span className="reveal-clip">
+                <motion.span className="reveal-block" {...reveal} transition={{ duration: 0.92, ease: revealEase }}>
+                  I design and build small, useful products with a focus on feel.
+                </motion.span>
+              </span>
             </h1>
             <p className="personal-intro">
-              Currently building Pinio and small product experiments under guba.studio{" "}
-              <span className="smile-mark" aria-hidden="true">
-                :)
+              <span className="reveal-clip">
+                <motion.span
+                  className="reveal-block"
+                  {...reveal}
+                  transition={{ delay: 0.08, duration: 0.78, ease: revealEase }}
+                >
+                  Currently building Pinio, plus small experiments through guba.studio{" "}
+                  <span className="smile-mark" aria-hidden="true">
+                    :)
+                  </span>
+                </motion.span>
               </span>
             </p>
           </motion.div>
-
-          <motion.a
-            aria-label="Open Pinio"
-            className="pixel-work"
-            href={pinioHref}
-            {...cursorHandlers(7, 28)}
-            rel="noreferrer"
-            style={reduceMotion ? undefined : { x: pixelX, y: pixelY }}
-            target="_blank"
-            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
-            animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-            transition={{ delay: 0.12, duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="pixel-work-top font-mono">
-              <span>01 / Pinio</span>
-              <span>open</span>
-            </span>
-            <DotMatrixSignature />
-            <span className="pixel-work-bottom">
-              <span>AI link organizer for saved TikToks, Reels, recipes, places, and videos.</span>
-            </span>
-          </motion.a>
         </div>
 
         <footer className="personal-footer">
           <a
+            className="cursor-link"
             href={contactHref}
             {...cursorHandlers(8, 22)}
           >
             hello@guba.studio
           </a>
-          <span>Madrid / 2026</span>
+          <span>Barcelona</span>
         </footer>
       </section>
     </main>
@@ -173,17 +192,21 @@ export function StudioHome() {
 
 function PersonalHeader({
   cursorHandlers,
+  onWorkPreviewChange,
 }: {
   cursorHandlers: (padding?: number, radius?: number) => {
     onPointerEnter: (event: PointerEvent<HTMLElement>) => void;
     onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
     onPointerMove: (event: PointerEvent<HTMLElement>) => void;
   };
+  onWorkPreviewChange: (visible: boolean) => void;
 }) {
+  const workHandlers = cursorHandlers(8, 22);
+
   return (
     <header className="site-header fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-6 px-5 py-5 text-[0.78rem] leading-relaxed md:px-10 md:py-7 md:text-[0.9rem]">
       <Link
-        className="w-max transition-opacity hover:opacity-55"
+        className="cursor-link w-max"
         href="/"
         {...cursorHandlers(8, 22)}
         aria-label="Adrian Gruber home"
@@ -191,17 +214,26 @@ function PersonalHeader({
         Adrian Gruber
       </Link>
       <nav className="flex justify-end gap-6 md:gap-12" aria-label="Primary navigation">
-        <a
-          className="transition-opacity hover:opacity-55"
-          href={pinioHref}
-          {...cursorHandlers(8, 22)}
-          rel="noreferrer"
-          target="_blank"
+        <Link
+          className="cursor-link"
+          href={workHref}
+          onPointerEnter={(event) => {
+            onWorkPreviewChange(true);
+            workHandlers.onPointerEnter(event);
+          }}
+          onPointerLeave={(event) => {
+            onWorkPreviewChange(false);
+            workHandlers.onPointerLeave(event);
+          }}
+          onPointerMove={(event) => {
+            onWorkPreviewChange(true);
+            workHandlers.onPointerMove(event);
+          }}
         >
           work
-        </a>
+        </Link>
         <a
-          className="transition-opacity hover:opacity-55"
+          className="cursor-link"
           href={contactHref}
           {...cursorHandlers(8, 22)}
         >
@@ -212,60 +244,46 @@ function PersonalHeader({
   );
 }
 
-const pixelGlyphs: Record<string, string[]> = {
-  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
-  G: ["01110", "10001", "10000", "10111", "10001", "10001", "01110"],
-};
-
-const dotCells = Array.from({ length: 24 * 38 }, (_, index) => {
-  const col = index % 38;
-  const row = Math.floor(index / 38);
-  const scale = 3;
-  const startY = 1;
-  const startX = 2;
-  const gap = 3;
-
-  function isLetterDot(letter: "A" | "G", offsetX: number) {
-    const localCol = col - offsetX;
-    const localRow = row - startY;
-
-    if (localCol < 0 || localRow < 0) return false;
-
-    const patternCol = Math.floor(localCol / scale);
-    const patternRow = Math.floor(localRow / scale);
-
-    if (patternRow >= 7 || patternCol >= 5) return false;
-
-    return pixelGlyphs[letter][patternRow][patternCol] === "1";
-  }
-
-  const active = isLetterDot("A", startX) || isLetterDot("G", startX + 5 * scale + gap);
-  const shimmer = (row * 17 + col * 11) % 9;
+const signatureDots = Array.from({ length: 84 }, (_, index) => {
+  const col = index % 12;
+  const row = Math.floor(index / 12);
+  const distance = Math.abs(col - 5.5) + Math.abs(row - 3);
+  const active = (row + col * 2) % 5 === 0 || (row === 3 && col > 2 && col < 9);
 
   return {
     active,
-    delay: `${(row * 26 + col * 12) % 1400}ms`,
     index,
-    opacity: active ? 0.78 + shimmer * 0.018 : 0.18 + shimmer * 0.018,
+    opacity: active ? Math.max(0.22, 0.58 - distance * 0.055) : Math.max(0.06, 0.2 - distance * 0.02),
   };
 });
 
-function DotMatrixSignature() {
+function SignatureMark() {
   return (
-    <span className="dot-signature" aria-hidden="true">
-      {dotCells.map((cell) => (
+    <span className="signature-dots" aria-hidden="true">
+      {signatureDots.map((dot) => (
         <span
-          className={`dot-signature-cell${cell.active ? " is-active" : ""}`}
-          key={cell.index}
-          style={
-            {
-              "--dot-delay": cell.delay,
-              "--dot-opacity": cell.opacity,
-            } as CSSProperties
-          }
+          className={dot.active ? "is-active" : undefined}
+          key={dot.index}
+          style={{ "--dot-opacity": dot.opacity } as CSSProperties}
         />
       ))}
     </span>
+  );
+}
+
+function WorkPreview({ visible }: { visible: boolean }) {
+  return (
+    <motion.div
+      className="work-peek"
+      aria-hidden={!visible}
+      initial={false}
+      animate={visible ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.985 }}
+      transition={{ duration: 0.28, ease: revealEase }}
+    >
+      <span>Pinio</span>
+      <span>AI link organizer</span>
+      <span>2026</span>
+    </motion.div>
   );
 }
 
@@ -273,6 +291,7 @@ function PersonalCursor({
   height,
   pressed,
   radius,
+  stretched,
   target,
   visible,
   width,
@@ -282,6 +301,7 @@ function PersonalCursor({
   height: MotionValue<number>;
   pressed: boolean;
   radius: MotionValue<number>;
+  stretched: boolean;
   target: CursorTarget | null;
   visible: boolean;
   width: MotionValue<number>;
@@ -299,7 +319,12 @@ function PersonalCursor({
     <motion.div
       className={`soft-cursor ${hasTarget ? "soft-cursor-target" : "soft-cursor-idle"}${pressed ? " is-pressed" : ""}`}
       aria-hidden="true"
-      animate={{ opacity: visible ? 1 : 0, scale: pressed ? 0.97 : 1 }}
+      animate={{
+        opacity: visible ? 1 : 0,
+        scale: pressed ? 0.97 : 1,
+        scaleX: stretched ? 1.08 : 1,
+        scaleY: stretched ? 0.96 : 1,
+      }}
       style={{
         borderRadius: smoothRadius,
         height: smoothHeight,
