@@ -7,7 +7,7 @@ import type { CSSProperties, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useClientReducedMotion } from "@/components/use-client-reduced-motion";
 
-const contactHref = "mailto:hello@guba.studio";
+const contactHref = "mailto:hello@adriangruber.com";
 const workHref = "/work";
 const cursorSpring = { damping: 38, stiffness: 360, mass: 0.85 };
 const revealEase = [0.22, 1, 0.36, 1] as const;
@@ -18,7 +18,7 @@ type CursorTarget = {
   radius: number;
 };
 
-export function StudioHome() {
+export function PersonalHome() {
   const reduceMotion = useClientReducedMotion();
   const [cursorTarget, setCursorTarget] = useState<CursorTarget | null>(null);
   const [cursorVisible, setCursorVisible] = useState(false);
@@ -165,7 +165,7 @@ export function StudioHome() {
                   {...reveal}
                   transition={{ delay: 0.08, duration: 0.78, ease: revealEase }}
                 >
-                  Currently building Pinio, plus small experiments through guba.studio{" "}
+                  Currently building Pinio and small useful products from Barcelona{" "}
                   <span className="smile-mark" aria-hidden="true">
                     :)
                   </span>
@@ -181,7 +181,7 @@ export function StudioHome() {
             href={contactHref}
             {...cursorHandlers(8, 22)}
           >
-            hello@guba.studio
+            hello@adriangruber.com
           </a>
           <span>Barcelona</span>
         </footer>

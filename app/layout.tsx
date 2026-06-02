@@ -26,9 +26,9 @@ const departureMono = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://guba.studio"),
+  metadataBase: new URL("https://adriangruber.com"),
   title: "Adrian Gruber",
-  description: "Adrian Gruber designs and builds useful digital products, including Pinio and experiments under guba.studio.",
+  description: "Adrian Gruber designs and builds small, useful digital products, including Pinio.",
   alternates: {
     canonical: "/",
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Adrian Gruber",
     description: "Product design, frontend, and useful digital products.",
-    url: "https://guba.studio/",
+    url: "https://adriangruber.com/",
     siteName: "Adrian Gruber",
     type: "website",
   },

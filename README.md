@@ -1,6 +1,6 @@
-# guba.studio
+# Adrian Gruber Site
 
-Premium studio site for [guba.studio](https://guba.studio).
+Personal website for Adrian Gruber.
 
 ## Stack
 
@@ -12,11 +12,11 @@ Premium studio site for [guba.studio](https://guba.studio).
 
 ## Deployment
 
-- Vercel project: `guba-studio-site`
+- Intended Vercel project: `adrian-gruber-site`
 - Production branch: `main`
-- Primary domain: `guba.studio`
-- `www.guba.studio` redirects to `guba.studio`
+- Intended primary domain: `adriangruber.com`
+- `www.adriangruber.com` should redirect to `adriangruber.com`
 
 The site is a Next.js app deployed from this folder.
 
-Pushes to `main` deploy through the connected GitHub integration.
+Do not deploy this repo to the old `guba-studio-site` Vercel project.

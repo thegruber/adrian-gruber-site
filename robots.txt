@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://guba.studio/sitemap.xml
+Sitemap: https://adriangruber.com/sitemap.xml

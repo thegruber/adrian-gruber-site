@@ -10,7 +10,7 @@ const packageJson = JSON.parse(read("package.json"));
 const layout = read("app/layout.tsx");
 const page = read("app/page.tsx");
 const workPage = read("app/work/page.tsx");
-const home = read("components/studio-home.tsx");
+const home = read("components/personal-home.tsx");
 const motionProvider = read("components/motion-provider.tsx");
 const reducedMotionHook = read("components/use-client-reduced-motion.ts");
 const globals = read("app/globals.css");
@@ -30,7 +30,7 @@ test("Next app uses the selected premium stack", () => {
 
 test("App Router metadata and fonts are configured", () => {
   assert.match(layout, /export const metadata/);
-  assert.match(layout, /metadataBase:\s*new URL\("https:\/\/guba\.studio"\)/);
+  assert.match(layout, /metadataBase:\s*new URL\("https:\/\/adriangruber\.com"\)/);
   assert.match(layout, /canonical:\s*"\/"/);
   assert.match(layout, /openGraph/);
   assert.match(layout, /title:\s*"Adrian Gruber"/);
@@ -40,22 +40,22 @@ test("App Router metadata and fonts are configured", () => {
   assert.match(layout, /DM_Mono/);
   assert.match(layout, /localFont/);
   assert.match(layout, /DepartureMono-Regular\.woff2/);
-  assert.match(page, /StudioHome/);
+  assert.match(page, /PersonalHome/);
 });
 
 test("homepage renders personal copy and one-screen personal surface", () => {
   assert.match(home, /I design and build small, useful products with a focus on feel/);
-  assert.match(home, /Currently building Pinio, plus small experiments through guba\.studio/);
+  assert.match(home, /Currently building Pinio and small useful products from Barcelona/);
   assert.match(home, /className="smile-mark"/);
   assert.match(home, /design \/ code \/ products/);
   assert.doesNotMatch(home, /distribution|craft systems|studio index|pinio index/i);
   assert.match(home, /work/);
   assert.match(home, /contact/);
   assert.match(home, /Pinio/);
-  assert.match(home, /guba\.studio/);
+  assert.doesNotMatch(home, /guba\.studio/);
   assert.match(home, /Barcelona/);
   assert.doesNotMatch(home, /Madrid \/ 2026/);
-  assert.match(home, /mailto:hello@guba\.studio/);
+  assert.match(home, /mailto:hello@adriangruber\.com/);
   assert.match(home, /className="cursor-link"/);
   assert.match(home, /href=\{workHref\}/);
   assert.match(home, /SignatureMark/);
@@ -120,13 +120,13 @@ test("Tailwind tokens and deployment assets are preserved", () => {
   assert.doesNotMatch(globals, /\.footer-line/);
   assert.match(globals, /\.slash-mark[\s\S]*font-family:\s*var\(--font-departure-mono\)/);
   assert.match(globals, /\.smile-mark[\s\S]*font-family:\s*var\(--font-departure-mono\)/);
-  assert.match(sitemap, /https:\/\/guba\.studio\/work/);
+  assert.match(sitemap, /https:\/\/adriangruber\.com\/work/);
   assert.match(vercel, /Content-Security-Policy/);
   assert.match(vercel, /X-Frame-Options/);
   assert.ok(existsSync(join(root, "public/robots.txt")));
   assert.ok(existsSync(join(root, "public/sitemap.xml")));
   assert.ok(existsSync(join(root, "public/favicon.svg")));
-  assert.ok(existsSync(join(root, "public/legal/never-have-i-ever/privacy.html")));
+  assert.doesNotMatch(sitemap, /legal\/never-have-i-ever/);
 });
 
 test("work route lists Pinio as the only selected product", () => {
@@ -136,6 +136,6 @@ test("work route lists Pinio as the only selected product", () => {
   assert.match(workPage, /Pinio/);
   assert.match(workPage, /AI link organizer/);
   assert.match(workPage, /https:\/\/www\.pinio-app\.com\/en/);
-  assert.match(workPage, /mailto:hello@guba\.studio/);
+  assert.match(workPage, /mailto:hello@adriangruber\.com/);
   assert.doesNotMatch(workPage, /Never Have I Ever|consumer app scout|studio index/i);
 });

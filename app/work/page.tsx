@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Work - Adrian Gruber",
     description: "Selected product work by Adrian Gruber.",
-    url: "https://guba.studio/work",
+    url: "https://adriangruber.com/work",
   },
 };
 
@@ -21,7 +21,7 @@ export default function WorkPage() {
     <main className="work-page">
       <header className="work-page-header">
         <Link href="/">Adrian Gruber</Link>
-        <a href="mailto:hello@guba.studio">contact</a>
+        <a href="mailto:hello@adriangruber.com">contact</a>
       </header>
 
       <section className="work-page-main" aria-labelledby="work-title">

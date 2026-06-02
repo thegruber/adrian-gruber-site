@@ -7,10 +7,10 @@
       "has": [
         {
           "type": "host",
-          "value": "www.guba.studio"
+          "value": "www.adriangruber.com"
         }
       ],
-      "destination": "https://guba.studio/:path*",
+      "destination": "https://adriangruber.com/:path*",
       "permanent": true
     }
   ],

@@ -6,7 +6,7 @@ import { useClientReducedMotion } from "@/components/use-client-reduced-motion";
 
 const heroAscii = [
   "+----------------+",
-  "| guba.studio    |",
+  "| Adrian Gruber  |",
   "|                |",
   "| useful digital |",
   "| products    :) |",
