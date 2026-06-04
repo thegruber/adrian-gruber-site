@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-
-const pinioHref = "https://www.pinio-app.com/en";
+import { WorkIndex } from "@/components/work-index";
+import { workItems } from "@/components/work-data";
 
 export const metadata: Metadata = {
   title: "Work - Adrian Gruber",
@@ -19,23 +19,23 @@ export const metadata: Metadata = {
 export default function WorkPage() {
   return (
     <main className="work-page">
+      <div className="work-page-field" aria-hidden="true" />
       <header className="work-page-header">
         <Link href="/">Adrian Gruber</Link>
         <a href="mailto:hello@adriangruber.com">contact</a>
       </header>
 
       <section className="work-page-main" aria-labelledby="work-title">
-        <h1 className="work-page-title" id="work-title">
-          selected work
-        </h1>
-
-        <div className="work-list" aria-label="Selected products">
-          <a className="work-row" href={pinioHref} rel="noreferrer" target="_blank">
-            <span className="work-row-title">Pinio</span>
-            <span className="work-row-desc">AI link organizer for saved TikToks, Reels, recipes, places, and videos.</span>
-            <span className="work-row-year">2026</span>
-          </a>
+        <div className="work-page-copy">
+          <h1 className="work-page-title" id="work-title">
+            selected work
+          </h1>
+          <p className="work-page-intro">
+            A tight public index of products I am actively building or shaping. Each entry stays compact until the work deserves a deeper page.
+          </p>
         </div>
+
+        <WorkIndex items={workItems} />
       </section>
     </main>
   );

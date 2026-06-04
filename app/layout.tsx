@@ -28,7 +28,7 @@ const departureMono = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL("https://adriangruber.com"),
   title: "Adrian Gruber",
-  description: "Adrian Gruber designs and builds small, useful digital products, including Pinio.",
+  description: "Adrian Gruber designs and builds products that look sharp, feel natural, and make sense.",
   alternates: {
     canonical: "/",
   },
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Adrian Gruber",
-    description: "Product design, frontend, and useful digital products.",
+    description: "UX/UI, frontend, product systems, and useful automation.",
     url: "https://adriangruber.com/",
     siteName: "Adrian Gruber",
     type: "website",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Adrian Gruber",
-    description: "Product design, frontend, and useful digital products.",
+    description: "UX/UI, frontend, product systems, and useful automation.",
   },
   robots: {
     index: true,

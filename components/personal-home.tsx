@@ -1,106 +1,97 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useMotionValue, useSpring } from "motion/react";
-import type { MotionValue } from "motion/react";
-import type { CSSProperties, PointerEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { frame, motion, useSpring } from "motion/react";
+import type { MotionStyle } from "motion/react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useClientReducedMotion } from "@/components/use-client-reduced-motion";
 
 const contactHref = "mailto:hello@adriangruber.com";
+const githubHref = "https://github.com/thegruber";
+const linkedinHref = "https://www.linkedin.com/in/adrian-gruber";
 const workHref = "/work";
-const cursorSpring = { damping: 38, stiffness: 360, mass: 0.85 };
+const cursorSize = 10;
+const cursorTargetPadding = 9;
+const cursorTargetRadius = 21;
+const cursorBaseFill = "#000000";
+const cursorSpring = { damping: 30, stiffness: 620, mass: 0.55 };
 const revealEase = [0.22, 1, 0.36, 1] as const;
 
 type CursorTarget = {
   element: HTMLElement;
+  fill: string;
   padding: number;
   radius: number;
+  text: string;
+};
+
+type CursorHandlers = {
+  onPointerEnter: (event: ReactPointerEvent<HTMLElement>) => void;
+  onPointerLeave: (event: ReactPointerEvent<HTMLElement>) => void;
+  onPointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
 };
 
 export function PersonalHome() {
   const reduceMotion = useClientReducedMotion();
   const [cursorTarget, setCursorTarget] = useState<CursorTarget | null>(null);
+  const [cursorFill, setCursorFill] = useState(cursorBaseFill);
   const [cursorVisible, setCursorVisible] = useState(false);
   const [cursorPressed, setCursorPressed] = useState(false);
-  const [cursorStretched, setCursorStretched] = useState(false);
-  const [workPreviewVisible, setWorkPreviewVisible] = useState(false);
   const activeTarget = useRef<CursorTarget | null>(null);
-  const stretchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cursorX = useMotionValue(-80);
-  const cursorY = useMotionValue(-80);
-  const cursorWidth = useMotionValue(16);
-  const cursorHeight = useMotionValue(16);
-  const cursorRadius = useMotionValue(999);
-  const latestPointer = useRef({ x: -80, y: -80 });
 
   useEffect(() => {
+    document.documentElement.classList.add("home-scroll-locked");
+    window.scrollTo(0, 0);
+
     return () => {
-      if (stretchTimeout.current) clearTimeout(stretchTimeout.current);
+      document.documentElement.classList.remove("home-scroll-locked");
     };
   }, []);
 
-  function pulseCursor() {
-    setCursorStretched(true);
-    if (stretchTimeout.current) clearTimeout(stretchTimeout.current);
-    stretchTimeout.current = setTimeout(() => setCursorStretched(false), 170);
+  function handlePointerEnter() {
+    setCursorVisible(true);
   }
 
-  function moveCursor(clientX: number, clientY: number, target = activeTarget.current) {
-    latestPointer.current = { x: clientX, y: clientY };
-
-    if (!target) {
-      cursorX.set(clientX - 8);
-      cursorY.set(clientY - 8);
-      cursorWidth.set(16);
-      cursorHeight.set(16);
-      cursorRadius.set(999);
-      return;
-    }
-
-    const rect = target.element.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const magneticSnap = 0.78;
-    const width = rect.width + target.padding * 2;
-    const height = rect.height + target.padding * 2;
-    const cursorCenterX = centerX * magneticSnap + clientX * (1 - magneticSnap);
-    const cursorCenterY = centerY * magneticSnap + clientY * (1 - magneticSnap);
-
-    cursorX.set(cursorCenterX - width / 2);
-    cursorY.set(cursorCenterY - height / 2);
-    cursorWidth.set(width);
-    cursorHeight.set(height);
-    cursorRadius.set(target.radius);
-  }
-
-  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+  function handlePointerMove() {
     if (reduceMotion) return;
 
-    moveCursor(event.clientX, event.clientY);
+    setCursorVisible(true);
   }
 
-  function setCursorAround(element: HTMLElement, event?: PointerEvent<HTMLElement>, padding = 8, radius = 22) {
-    const isNewTarget = activeTarget.current?.element !== element;
-    const target = { element, padding, radius };
+  function setCursorAround(
+    element: HTMLElement,
+    padding = cursorTargetPadding,
+    radius = cursorTargetRadius,
+  ) {
+    const style = window.getComputedStyle(element);
+    const fill = style.getPropertyValue("--link-liquid-fill").trim() || cursorBaseFill;
+    const text = style.getPropertyValue("--link-liquid-text").trim() || "var(--color-paper)";
+    const previousTarget = activeTarget.current;
+    const sameTarget =
+      previousTarget?.element === element &&
+      previousTarget.fill === fill &&
+      previousTarget.padding === padding &&
+      previousTarget.radius === radius &&
+      previousTarget.text === text;
+    const target = sameTarget ? previousTarget : { element, fill, padding, radius, text };
     activeTarget.current = target;
-    setCursorTarget(target);
-    if (isNewTarget) pulseCursor();
-
-    const rect = element.getBoundingClientRect();
-    moveCursor(event?.clientX ?? rect.left + rect.width / 2, event?.clientY ?? rect.top + rect.height / 2, target);
+    if (!sameTarget) {
+      setCursorTarget(target);
+      setCursorFill(fill);
+    }
   }
 
-  function resetCursor(event?: PointerEvent<HTMLElement>) {
+  function resetCursor() {
     activeTarget.current = null;
     setCursorTarget(null);
-    moveCursor(event?.clientX ?? latestPointer.current.x, event?.clientY ?? latestPointer.current.y, null);
+    setCursorFill(cursorBaseFill);
   }
 
-  const cursorHandlers = (padding = 8, radius = 22) => ({
-    onPointerEnter: (event: PointerEvent<HTMLElement>) => setCursorAround(event.currentTarget, event, padding, radius),
-    onPointerLeave: (event: PointerEvent<HTMLElement>) => resetCursor(event),
-    onPointerMove: (event: PointerEvent<HTMLElement>) => setCursorAround(event.currentTarget, event, padding, radius),
+  const cursorHandlers = (padding = cursorTargetPadding, radius = cursorTargetRadius): CursorHandlers => ({
+    onPointerEnter: (event) => setCursorAround(event.currentTarget, padding, radius),
+    onPointerLeave: () => resetCursor(),
+    onPointerMove: (event) => setCursorAround(event.currentTarget, padding, radius),
   });
 
   const reveal = {
@@ -112,31 +103,24 @@ export function PersonalHome() {
   return (
     <main
       className="home-canvas personal-canvas bg-paper text-ink"
-      onPointerEnter={() => setCursorVisible(true)}
-      onPointerLeave={() => setCursorVisible(false)}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={() => {
+        setCursorVisible(false);
+        resetCursor();
+      }}
       onPointerMove={handlePointerMove}
       onPointerDown={() => setCursorPressed(true)}
       onPointerUp={() => setCursorPressed(false)}
     >
       <PersonalCursor
+        fill={cursorFill}
         pressed={cursorPressed}
-        stretched={cursorStretched}
         target={cursorTarget}
         visible={cursorVisible && !reduceMotion}
-        height={cursorHeight}
-        radius={cursorRadius}
-        width={cursorWidth}
-        x={cursorX}
-        y={cursorY}
       />
-      <PersonalHeader
-        cursorHandlers={cursorHandlers}
-        onWorkPreviewChange={setWorkPreviewVisible}
-      />
+      <PersonalHeader cursorHandlers={cursorHandlers} />
 
       <section className="personal-frame" aria-labelledby="personal-title">
-        <SignatureMark />
-        <WorkPreview visible={workPreviewVisible} />
         <div className="personal-hero">
           <motion.div
             className="personal-copy"
@@ -151,13 +135,15 @@ export function PersonalHome() {
                 </motion.span>
               </span>
             </p>
-            <h1 id="personal-title" className="personal-title">
-              <span className="reveal-clip">
-                <motion.span className="reveal-block" {...reveal} transition={{ duration: 0.92, ease: revealEase }}>
-                  I design and build small, useful products with a focus on feel.
-                </motion.span>
-              </span>
-            </h1>
+            <motion.h1
+              id="personal-title"
+              className="personal-title"
+              initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={{ delay: 0.03, duration: 0.84, ease: revealEase }}
+            >
+              I design and build products that look sharp, feel natural, and make sense.
+            </motion.h1>
             <p className="personal-intro">
               <span className="reveal-clip">
                 <motion.span
@@ -165,10 +151,7 @@ export function PersonalHome() {
                   {...reveal}
                   transition={{ delay: 0.08, duration: 0.78, ease: revealEase }}
                 >
-                  Currently building Pinio and small useful products from Barcelona{" "}
-                  <span className="smile-mark" aria-hidden="true">
-                    :)
-                  </span>
+                  UX/UI, frontend, product systems, and useful automation. Based in Europe.
                 </motion.span>
               </span>
             </p>
@@ -176,14 +159,26 @@ export function PersonalHome() {
         </div>
 
         <footer className="personal-footer">
-          <a
-            className="cursor-link"
-            href={contactHref}
-            {...cursorHandlers(8, 22)}
-          >
-            hello@adriangruber.com
-          </a>
-          <span>Barcelona</span>
+          <nav className="personal-socials" aria-label="Social links">
+            <a
+              className="cursor-link social-link social-link-github"
+              href={githubHref}
+              rel="noreferrer"
+              target="_blank"
+              {...cursorHandlers()}
+            >
+              github
+            </a>
+            <a
+              className="cursor-link social-link social-link-linkedin"
+              href={linkedinHref}
+              rel="noreferrer"
+              target="_blank"
+              {...cursorHandlers()}
+            >
+              linkedin
+            </a>
+          </nav>
         </footer>
       </section>
     </main>
@@ -192,24 +187,16 @@ export function PersonalHome() {
 
 function PersonalHeader({
   cursorHandlers,
-  onWorkPreviewChange,
 }: {
-  cursorHandlers: (padding?: number, radius?: number) => {
-    onPointerEnter: (event: PointerEvent<HTMLElement>) => void;
-    onPointerLeave: (event: PointerEvent<HTMLElement>) => void;
-    onPointerMove: (event: PointerEvent<HTMLElement>) => void;
-  };
-  onWorkPreviewChange: (visible: boolean) => void;
+  cursorHandlers: (padding?: number, radius?: number) => CursorHandlers;
 }) {
-  const workHandlers = cursorHandlers(8, 22);
-
   return (
     <header className="site-header fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-6 px-5 py-5 text-[0.78rem] leading-relaxed md:px-10 md:py-7 md:text-[0.9rem]">
       <Link
         className="cursor-link w-max"
         href="/"
-        {...cursorHandlers(8, 22)}
         aria-label="Adrian Gruber home"
+        {...cursorHandlers()}
       >
         Adrian Gruber
       </Link>
@@ -217,25 +204,15 @@ function PersonalHeader({
         <Link
           className="cursor-link"
           href={workHref}
-          onPointerEnter={(event) => {
-            onWorkPreviewChange(true);
-            workHandlers.onPointerEnter(event);
-          }}
-          onPointerLeave={(event) => {
-            onWorkPreviewChange(false);
-            workHandlers.onPointerLeave(event);
-          }}
-          onPointerMove={(event) => {
-            onWorkPreviewChange(true);
-            workHandlers.onPointerMove(event);
-          }}
+          prefetch={false}
+          {...cursorHandlers()}
         >
           work
         </Link>
         <a
           className="cursor-link"
           href={contactHref}
-          {...cursorHandlers(8, 22)}
+          {...cursorHandlers()}
         >
           contact
         </a>
@@ -244,95 +221,102 @@ function PersonalHeader({
   );
 }
 
-const signatureDots = Array.from({ length: 84 }, (_, index) => {
-  const col = index % 12;
-  const row = Math.floor(index / 12);
-  const distance = Math.abs(col - 5.5) + Math.abs(row - 3);
-  const active = (row + col * 2) % 5 === 0 || (row === 3 && col > 2 && col < 9);
-
-  return {
-    active,
-    index,
-    opacity: active ? Math.max(0.22, 0.58 - distance * 0.055) : Math.max(0.06, 0.2 - distance * 0.02),
-  };
-});
-
-function SignatureMark() {
-  return (
-    <span className="signature-dots" aria-hidden="true">
-      {signatureDots.map((dot) => (
-        <span
-          className={dot.active ? "is-active" : undefined}
-          key={dot.index}
-          style={{ "--dot-opacity": dot.opacity } as CSSProperties}
-        />
-      ))}
-    </span>
-  );
-}
-
-function WorkPreview({ visible }: { visible: boolean }) {
-  return (
-    <motion.div
-      className="work-peek"
-      aria-hidden={!visible}
-      initial={false}
-      animate={visible ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.985 }}
-      transition={{ duration: 0.28, ease: revealEase }}
-    >
-      <span>Pinio</span>
-      <span>AI link organizer</span>
-      <span>2026</span>
-    </motion.div>
-  );
-}
-
 function PersonalCursor({
-  height,
+  fill,
   pressed,
-  radius,
-  stretched,
   target,
   visible,
-  width,
-  x,
-  y,
 }: {
-  height: MotionValue<number>;
+  fill: string;
   pressed: boolean;
-  radius: MotionValue<number>;
-  stretched: boolean;
   target: CursorTarget | null;
   visible: boolean;
-  width: MotionValue<number>;
-  x: MotionValue<number>;
-  y: MotionValue<number>;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { x, y, width, height, radius } = useFollowCursor(ref, target);
   const hasTarget = Boolean(target);
-  const smoothCursorX = useSpring(x, cursorSpring);
-  const smoothCursorY = useSpring(y, cursorSpring);
-  const smoothWidth = useSpring(width, cursorSpring);
-  const smoothHeight = useSpring(height, cursorSpring);
-  const smoothRadius = useSpring(radius, cursorSpring);
+  const cursorFill = fill;
+  const cursorStyle: MotionStyle = {
+    backgroundColor: cursorFill,
+    borderRadius: radius,
+    height: height,
+    width: width,
+    x: x,
+    y: y,
+  };
 
   return (
     <motion.div
-      className={`soft-cursor ${hasTarget ? "soft-cursor-target" : "soft-cursor-idle"}${pressed ? " is-pressed" : ""}`}
+      ref={ref}
+      className={`soft-cursor${hasTarget ? " is-target" : ""}${pressed ? " is-pressed" : ""}`}
       aria-hidden="true"
       animate={{
         opacity: visible ? 1 : 0,
-        scale: pressed ? 0.97 : 1,
-        scaleX: stretched ? 1.08 : 1,
-        scaleY: stretched ? 0.96 : 1,
+        scale: pressed ? (hasTarget ? 0.985 : 0.84) : 1,
       }}
-      style={{
-        borderRadius: smoothRadius,
-        height: smoothHeight,
-        left: smoothCursorX,
-        top: smoothCursorY,
-        width: smoothWidth,
-      }}
-      transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+      style={cursorStyle}
+      transition={{ duration: 0.12, ease: [0.22, 1, 0.36, 1] }}
     />
   );
+}
+
+function useFollowCursor(ref: RefObject<HTMLDivElement | null>, target: CursorTarget | null) {
+  const x = useSpring(-80, cursorSpring);
+  const y = useSpring(-80, cursorSpring);
+  const width = useSpring(cursorSize, cursorSpring);
+  const height = useSpring(cursorSize, cursorSpring);
+  const radius = useSpring(999, cursorSpring);
+  const targetRef = useRef(target);
+  const latestPointer = useRef({ x: -80, y: -80 });
+
+  const updateCursor = useCallback(
+    (clientX: number, clientY: number) => {
+      const element = ref.current;
+      if (!element) return;
+
+      frame.read(() => {
+        const target = targetRef.current;
+
+        if (target) {
+          const rect = target.element.getBoundingClientRect();
+          const targetWidth = rect.width + target.padding * 2;
+          const targetHeight = rect.height + target.padding * 2;
+          const targetX = rect.left + rect.width / 2;
+          const targetY = rect.top + rect.height / 2;
+
+          width.set(targetWidth);
+          height.set(targetHeight);
+          radius.set(target.radius);
+          x.set(targetX - element.offsetLeft - targetWidth / 2);
+          y.set(targetY - element.offsetTop - targetHeight / 2);
+          return;
+        }
+
+        width.set(cursorSize);
+        height.set(cursorSize);
+        radius.set(999);
+        x.set(clientX - element.offsetLeft - cursorSize / 2);
+        y.set(clientY - element.offsetTop - cursorSize / 2);
+      });
+    },
+    [height, radius, ref, width, x, y],
+  );
+
+  useEffect(() => {
+    targetRef.current = target;
+    updateCursor(latestPointer.current.x, latestPointer.current.y);
+  }, [target, updateCursor]);
+
+  useEffect(() => {
+    const handlePointerMove = ({ clientX, clientY }: PointerEvent) => {
+      latestPointer.current = { x: clientX, y: clientY };
+      updateCursor(clientX, clientY);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+
+    return () => window.removeEventListener("pointermove", handlePointerMove);
+  }, [updateCursor]);
+
+  return { x, y, width, height, radius };
 }
