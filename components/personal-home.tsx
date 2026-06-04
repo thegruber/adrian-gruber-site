@@ -10,7 +10,6 @@ import { useClientReducedMotion } from "@/components/use-client-reduced-motion";
 const contactHref = "mailto:hello@adriangruber.com";
 const githubHref = "https://github.com/thegruber";
 const linkedinHref = "https://www.linkedin.com/in/adrian-gruber";
-const workHref = "/work";
 const cursorSize = 10;
 const cursorTargetPadding = 9;
 const cursorTargetRadius = 21;
@@ -201,14 +200,6 @@ function PersonalHeader({
         Adrian Gruber
       </Link>
       <nav className="flex justify-end gap-6 md:gap-12" aria-label="Primary navigation">
-        <Link
-          className="cursor-link"
-          href={workHref}
-          prefetch={false}
-          {...cursorHandlers()}
-        >
-          work
-        </Link>
         <a
           className="cursor-link"
           href={contactHref}
