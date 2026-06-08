@@ -14,6 +14,9 @@
 }
 
 :root {
+  --corner-inline: clamp(1rem, 3.2vw, 2.5rem);
+  --corner-block: clamp(1rem, 3vh, 1.75rem);
+  --frame-text-size: 0.96rem;
   color-scheme: light;
   background: var(--color-paper);
 }
@@ -62,6 +65,7 @@ a {
 .site-header {
   color: var(--color-ink);
   mix-blend-mode: normal;
+  padding: var(--corner-block) var(--corner-inline);
 }
 
 .font-mono {
@@ -80,6 +84,7 @@ a {
   position: relative;
   isolation: isolate;
   cursor: none;
+  background: var(--color-paper);
 }
 
 .personal-canvas a {
@@ -89,6 +94,8 @@ a {
 .cursor-link {
   --link-liquid-fill: var(--color-ink);
   --link-liquid-text: var(--color-paper);
+  --cursor-target-hit-x: 0.62em;
+  --cursor-target-hit-y: 0.32em;
   position: relative;
   z-index: 0;
   isolation: isolate;
@@ -98,12 +105,18 @@ a {
   min-height: 1.35em;
   border-radius: 999px;
   color: currentColor;
-  font-size: 0.96rem;
+  font-size: var(--frame-text-size);
   font-weight: 400;
   letter-spacing: 0;
   line-height: 1.35;
+  margin: calc(var(--cursor-target-hit-y) * -1) calc(var(--cursor-target-hit-x) * -1);
+  padding: var(--cursor-target-hit-y) var(--cursor-target-hit-x);
   text-decoration: none;
+  touch-action: none;
   transition: color 180ms var(--ease-premium);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
 }
 
 .cursor-link:hover {
@@ -134,15 +147,46 @@ a {
   display: grid;
   height: 100svh;
   min-height: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
-  padding: clamp(5.8rem, 10vh, 8.1rem) clamp(1.4rem, 4.2vw, 4.25rem) clamp(1.2rem, 3.2vh, 2.4rem);
+  align-items: center;
+  grid-template-rows: minmax(0, 1fr);
+  padding: clamp(5.4rem, 8vh, 6.9rem) clamp(3.35rem, 5vw, 5.5rem);
   overflow: hidden;
   pointer-events: none;
 }
 
+.startup-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  color: var(--color-ink);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.startup-cursor-dot {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  translate: -50% -50%;
+  will-change: height, transform, width;
+}
+
+.startup-cursor-value {
+  display: block;
+  min-width: 3ch;
+  font-size: 2rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+  text-align: center;
+}
+
 .personal-hero {
   position: relative;
-  align-self: center;
   display: block;
   max-width: 76rem;
 }
@@ -150,44 +194,146 @@ a {
 .personal-copy {
   max-width: 68rem;
   padding-bottom: 0.25rem;
+  pointer-events: auto;
 }
 
-.personal-kicker {
-  margin: 0 0 clamp(1.1rem, 2.7vh, 2rem);
-  color: var(--color-muted);
-  font-size: 0.78rem;
-  line-height: 1.35;
+.terminal-word {
+  display: inline-grid;
+  position: relative;
+  overflow: visible;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.terminal-word-value {
+  grid-area: 1 / 1;
+  position: relative;
+  display: inline-block;
+  min-width: 0;
+  transform-origin: left center;
+  white-space: pre;
+  will-change: clip-path, opacity, transform;
+}
+
+.terminal-word.is-exiting .terminal-word-value {
+  animation: terminal-word-dissolve-out 240ms var(--ease-premium) both;
+}
+
+.terminal-word.is-entering .terminal-word-value {
+  animation: terminal-word-reveal-in 680ms var(--ease-premium) both;
+}
+
+.scramble-reveal-text {
+  display: inline;
+}
+
+.scramble-word-slot {
+  display: inline-grid;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.scramble-measure,
+.scramble-value {
+  grid-area: 1 / 1;
+  white-space: pre;
+}
+
+.scramble-word-slot > .scramble-value {
+  position: absolute;
+  inset: 0;
+}
+
+.scramble-measure {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.scramble-space {
+  white-space: pre;
+}
+
+@keyframes terminal-word-dissolve-out {
+  0% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+    transform: translateY(-0.035em);
+  }
+}
+
+@keyframes terminal-word-reveal-in {
+  0% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0.055em);
+  }
+
+  48% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0.012em);
+  }
+
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.text-cursor-zone {
+  display: inline;
+}
+
+.headline-line {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.living-word {
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: inherit;
 }
 
 .personal-title {
-  max-width: 19.6ch;
+  max-width: 14.4ch;
   margin: 0;
-  font-size: clamp(3.6rem, 5.45vw, 5.35rem);
+  font-size: clamp(3.72rem, 5.9vw, 6rem);
   font-weight: 500;
-  line-height: 1.04;
-  text-wrap: balance;
+  line-height: 1;
 }
 
-.personal-intro {
-  max-width: 34rem;
-  margin: clamp(1.35rem, 3.3vh, 2.5rem) 0 0;
-  color: var(--color-muted);
-  font-size: 1rem;
-  line-height: 1.68;
+.personal-meta {
+  margin: clamp(1.2rem, 2.8vh, 2.1rem) 0 0;
+  color: rgb(0 0 0 / 66%);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-transform: lowercase;
 }
 
 .personal-footer {
-  position: absolute;
+  position: fixed;
   z-index: 40;
-  right: clamp(1.4rem, 4.2vw, 4.25rem);
-  bottom: clamp(1.2rem, 3.2vh, 2.4rem);
+  right: var(--corner-inline);
+  bottom: var(--corner-block);
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
   gap: 1.5rem;
   padding-top: 0;
   color: var(--color-muted);
-  font-size: 0.96rem;
+  font-size: var(--frame-text-size);
   line-height: 1.35;
   pointer-events: auto;
 }
@@ -222,12 +368,12 @@ a {
 }
 
 .social-link-github {
-  --social-fill: #1f2328;
-  --social-text: #3fb950;
+  --social-fill: #000000;
+  --social-text: #0fbf3e;
 }
 
 .social-link-linkedin {
-  --social-fill: #0a66c2;
+  --social-fill: #2867b2;
   --social-text: #ffffff;
 }
 
@@ -239,7 +385,9 @@ a {
   display: block;
   border-radius: 999px;
   border: 0;
-  background: #000000;
+  background-color: #050505;
+  background-image: none;
+  box-shadow: none;
   pointer-events: none;
   mix-blend-mode: normal;
   transform-origin: center;
@@ -248,11 +396,28 @@ a {
 
 .soft-cursor.is-target {
   animation: cursor-paint-shell 2.6s cubic-bezier(0.45, 0, 0.2, 1) infinite alternate;
-  background: #000000;
+  background-image: none;
+  box-shadow: 0 16px 38px rgb(0 0 0 / 15%);
 }
 
 .soft-cursor.is-pressed {
-  background: #000000;
+  box-shadow: none;
+}
+
+.soft-cursor.is-target.is-pressed {
+  box-shadow: 0 10px 28px rgb(0 0 0 / 18%);
+}
+
+.soft-cursor.is-target.is-dragging {
+  animation-duration: 1.35s;
+  box-shadow: 0 22px 48px rgb(0 0 0 / 18%);
+}
+
+.soft-cursor.is-text {
+  z-index: 65;
+  background-image: none;
+  box-shadow: none;
+  mix-blend-mode: normal;
 }
 
 @keyframes cursor-paint-shell {
@@ -280,8 +445,9 @@ a {
 @media (max-width: 900px) {
   .personal-frame {
     min-height: 100svh;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr);
     padding-top: 5.7rem;
+    padding-bottom: 5.7rem;
   }
 
   .personal-hero {
@@ -293,36 +459,22 @@ a {
   }
 
   .personal-title {
-    max-width: 13.6ch;
-    font-size: 3.75rem;
+    max-width: 13ch;
+    font-size: 3.9rem;
   }
 
-  .personal-intro {
-    margin-top: 1.6rem;
-    font-size: 0.96rem;
-    line-height: 1.55;
+  .personal-meta {
+    margin-top: 1.35rem;
   }
 }
 
 @media (max-width: 700px) {
-  .site-header {
-    padding-right: 1rem;
-    padding-left: 1rem;
-  }
-
   .personal-frame {
-    padding-right: 1rem;
-    padding-bottom: 1rem;
-    padding-left: 1rem;
+    padding: 5.4rem 1rem;
   }
 
   .personal-title {
-    font-size: 3.1rem;
-  }
-
-  .personal-footer {
-    right: 1rem;
-    bottom: 1rem;
+    font-size: 3.18rem;
   }
 }
 
@@ -338,22 +490,19 @@ a {
 
   .personal-frame {
     min-height: 100svh;
+    padding-top: 5rem;
+    padding-bottom: 5rem;
     row-gap: 1rem;
   }
 
-  .personal-kicker {
-    font-size: 0.62rem;
-  }
-
   .personal-title {
-    max-width: 11.8ch;
-    font-size: 2.52rem;
+    max-width: 12.4ch;
+    font-size: 2.72rem;
   }
 
-  .personal-intro {
-    max-width: 21rem;
-    margin-top: 1.2rem;
-    font-size: 0.88rem;
+  .personal-meta {
+    margin-top: 1.1rem;
+    font-size: 0.66rem;
   }
 }
 
